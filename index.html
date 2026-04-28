@@ -1,0 +1,196 @@
+<!doctype html>
+<html>
+<head>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/alpinejs@3.15.11/dist/cdn.min.js" defer></script>
+    <script type="application/javascript">
+
+        const App = (game) => {
+            return {
+
+                game: game,
+                pace: 100,
+                stepCount: 0,
+                interval: null,
+                cellSize: 20,
+
+                liveCells() {
+                    const liveCells = [];
+                    const iterator = this.game.cells[Symbol.iterator]();
+                    for (const [key, xy] of iterator) {
+                        const [x, y] = xy;
+                        liveCells.push({
+                            key: key,
+                            x: x,
+                            y: y,
+                        });
+                    }
+                    return liveCells;
+                },
+
+                step() {
+                    this.game.step();
+                    this.stepCount++;
+                },
+
+                startInterval() {
+                    this.interval = setInterval(() => {
+                        this.step();
+                    }, this.pace);
+                },
+
+                stopInterval() {
+                    clearInterval(this.interval);
+                    this.interval = null;
+                },
+
+            }
+        }
+
+        function keyToXy(str) {
+            return str.split(',').map(Number);
+        }
+
+        function xyToKey(xy) {
+            return xy[0] + "," + xy[1];
+        }
+
+        class Game {
+
+            height = 0;
+            width = 0;
+            cells = new Map();
+
+            getNeighbors(xy) {
+                const [x, y] = xy;
+                return [
+                    [x-1, y-1], [x, y-1], [x+1, y-1],
+                    [x-1, y],             [x+1, y],
+                    [x-1, y+1], [x, y+1], [x+1, y+1],
+                ];
+            }
+
+            countLive(xys) {
+                return xys
+                    .filter(xy => this.cells.has(xyToKey(xy)))
+                    .length;
+            }
+
+            step() {
+
+                const neighborsMap = new Map();
+
+                this.cells.forEach((xy, key) => {
+                    const neighbors = this.getNeighbors(xy);
+                    const count = this.countLive(neighbors);
+                    neighborsMap.set(key, count);
+                    neighbors.forEach(nxy => {
+                        const nKey = xyToKey(nxy);
+                        if (!this.cells.has(nKey))
+                        {
+                            const count = (neighborsMap.get(nKey) ?? 0) + 1;
+                            neighborsMap.set(nKey, count);
+                        }
+                    });
+                });
+
+                const next = new Map();
+
+                neighborsMap.forEach((count, key) => {
+                    if (
+                        (count === 3)
+                        || (count === 2 && this.cells.has(key))
+                    )
+                    {
+                        next.set(key, keyToXy(key));
+                    }
+                });
+
+                this.cells = next;
+
+            }
+
+            static fromLines(lines) {
+                const world = new Game();
+                world.height = lines.length;
+                for (const [y, line] of lines.entries()) {
+                    if (y === 0) {
+                        world.width = line.length;
+                    }
+                    for (const [x, state] of line.split('').entries()) {
+                        if (state === 'x')
+                        {
+                            world.cells.set(xyToKey([x, y]), [x, y]);
+                        }
+                    }
+                }
+                return world;
+            }
+
+        }
+
+        const InTheBeginning = [
+            '',
+            '    x                            x ',
+            '    x    xx               xx     x ',
+            '    x    xx               xx     x ',
+            '',
+            '',
+            '     xxx                     xxx ',
+            '       x                       x ',
+            '      x                       x ',
+            '',
+            '    x            x ',
+            '     x            x ',
+            '   xxx          xxx ',
+            '',
+            '',
+
+            '             x               x ',
+            '      x      x               x      x ',
+            '      x      x               x      x      ',
+        ];
+
+        $app = App(Game.fromLines(InTheBeginning));
+
+    </script>
+
+</head>
+<body>
+
+<main x-data="$app" class="relative flex flex-col min-h-screen">
+
+    <div class="relative w-full z-2 p-4">
+        <button class="py-1 px-3 rounded-sm text-white bg-green-700 cursor-pointer" @click="startInterval" x-show="!interval">Start</button>
+        <button class="py-1 px-3 rounded-sm text-white bg-red-700 cursor-pointer" @click="stopInterval" x-show="interval">Stop</button>
+        <button class="py-1 px-3 rounded-sm text-white bg-gray-700 cursor-pointer" @click="step" x-show="!interval">Step</button>
+        <span class="py-1 px-3 text-gray-400" x-text="stepCount"></span>
+    </div>
+
+    <div
+        class="relative z-1 overflow-hidden flex grow bg-gray-100"
+        :style="{'min-width': (game.width * cellSize) + 'px', 'min-height': (game.width * cellSize) + 'px'}"
+    >
+        <template x-for="s in liveCells" :key="s.key">
+            <div
+                class="bg-black absolute"
+                :style="{width: cellSize + 'px', height: cellSize + 'px', top: (cellSize * s.y) + 'px', left: (cellSize * s.x) + 'px'}"
+            ></div>
+        </template>
+    </div>
+
+    <div class="w-full z-2 p-4 flex justify-between text-xs text-gray-400">
+        <p class="italic">
+            A basic implementation of John Conway's <a href="https://conwaylife.com" class="underline">"Game of Life"</a>
+        </p>
+        <p>
+            <a href="https://github.com/michaelrog/Conway" class="underline">View source</a>
+        </p>
+    </div>
+
+</main>
+
+</body>
+</html>
