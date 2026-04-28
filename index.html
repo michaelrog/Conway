@@ -59,8 +59,6 @@
 
         class Game {
 
-            height = 0;
-            width = 0;
             cells = new Map();
 
             getNeighbors(xy) {
@@ -113,20 +111,16 @@
             }
 
             static fromLines(lines) {
-                const world = new Game();
-                world.height = lines.length;
+                const game = new Game();
                 for (const [y, line] of lines.entries()) {
-                    if (y === 0) {
-                        world.width = line.length;
-                    }
                     for (const [x, state] of line.split('').entries()) {
                         if (state === 'x')
                         {
-                            world.cells.set(xyToKey([x, y]), [x, y]);
+                            game.cells.set(xyToKey([x, y]), [x, y]);
                         }
                     }
                 }
-                return world;
+                return game;
             }
 
         }
