@@ -46,6 +46,12 @@
                     this.interval = null;
                 },
 
+                boop(e) {
+                    x = Math.floor(e.offsetX / this.cellSize);
+                    y = Math.floor(e.offsetY / this.cellSize);
+                    this.game.cells.set(xyToKey([x, y]), [x, y]);
+                }
+
             }
         }
 
@@ -164,8 +170,9 @@
     </div>
 
     <div
-        class="relative z-1 overflow-hidden flex grow bg-gray-100"
+        class="relative z-1 overflow-hidden flex grow bg-gray-100 pointer-plus"
         :style="{'min-width': (game.width * cellSize) + 'px', 'min-height': (game.width * cellSize) + 'px'}"
+        @click.self="boop"
     >
         <template x-for="s in liveCells" :key="s.key">
             <div
