@@ -1,0 +1,17 @@
+{
+  "name": "dev-rog-conway",
+  "compatibility_date": "2026-10-21",
+  "assets": {
+    "directory": "./public"
+  },
+  "observability": {
+    "enabled": true
+  },
+  "routes": [
+    {
+      "pattern": "conway.rog.dev",
+      "custom_domain": true
+    }
+  ],
+  "workers_dev": false
+}
